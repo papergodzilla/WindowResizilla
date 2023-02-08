@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -26,15 +26,13 @@ public static class WindowUtils
         Action<string, string>? onConfigNoMatch,
         bool onlyAuto = false)
     {
-        if (!IsProcessAvailable(handle, out string processName, onFailed))
-        {
-            return;
-        }
+        if (!IsProcessAvailable(handle, out string processName, onFailed)) return;
 
         if (string.IsNullOrWhiteSpace(processName)) return;
 
         var windowTitle = Resizer.GetWindowTitle(handle) ?? string.Empty;
-        var match = GetMatchWindowSize(config.WindowSizes, processName, windowTitle, onlyAuto);
+        var windowState = Resizer.GetWindowState(handle);
+        var match = GetMatchWindowSize(config.WindowSizes, processName, windowTitle, windowState, onlyAuto);
         if (!match.NoMatch)
         {
             MoveMatchWindow(match, handle);
@@ -62,7 +60,8 @@ public static class WindowUtils
         }
 
         var windowTitle = Resizer.GetWindowTitle(handle);
-        var match = GetMatchWindowSize(config.WindowSizes, processName, windowTitle);
+        var windowState = Resizer.GetWindowState(handle);
+        var match = GetMatchWindowSize(config.WindowSizes, processName, windowTitle, windowState);
 
         var place = Resizer.GetPlacement(handle);
 
@@ -141,13 +140,14 @@ public static class WindowUtils
     }
 
     private static MatchWindowSize GetMatchWindowSize(
-        IEnumerable<WindowSize> windowSizes,
+        IEnumerable<WindowSize> configWindowSizes,
         string processName,
         string? title,
+        Common.Windows.WindowState windowState,
         bool onlyAuto = false)
     {
-        var windows = windowSizes.Where(w =>
-                                     w.Name.Equals(processName, StringComparison.OrdinalIgnoreCase))
+        var windows = configWindowSizes.Where(w => w.Name.Equals(processName, StringComparison.OrdinalIgnoreCase)
+                                                    && w.State == windowState)
                                  .ToList();
 
         if (onlyAuto)
@@ -160,15 +160,17 @@ public static class WindowUtils
             title = "*";
         }
 
-        return new MatchWindowSize
+
+        // TODO: should only return the config we want to use?
+        var nonFullscreenMatches = new MatchWindowSize
         {
             FullMatch = windows.FirstOrDefault(w => w.Title == title),
-            PrefixMatch = windows.FirstOrDefault(w =>
-                w.Title.StartsWith("*") && w.Title.Length > 1 && title!.EndsWith(w.Title.TrimStart('*'))),
-            SuffixMatch = windows.FirstOrDefault(w =>
-                w.Title.EndsWith("*") && w.Title.Length > 1 && title!.StartsWith(w.Title.TrimEnd('*'))),
+            PrefixMatch = windows.FirstOrDefault(w => w.Title.EndsWith("*") && w.Title.Length > 1 && title!.StartsWith(w.Title.TrimEnd('*'))),            
+            SuffixMatch = windows.FirstOrDefault(w => w.Title.StartsWith("*") && w.Title.Length > 1 && title!.EndsWith(w.Title.TrimStart('*'))),
             WildcardMatch = windows.FirstOrDefault(w => w.Title.Equals("*"))
         };
+
+        return nonFullscreenMatches;
     }
 
 
