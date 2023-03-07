@@ -44,7 +44,7 @@ namespace WindowResizer
                     Alignment = DataGridViewContentAlignment.MiddleLeft,
                 },
                 FillWeight = 15,
-                DisplayIndex = 0,
+                //DisplayIndex = 0,
             });
             ProcessesGrid.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -56,15 +56,69 @@ namespace WindowResizer
                     Alignment = DataGridViewContentAlignment.MiddleLeft
                 },
                 FillWeight = 35,
-                DisplayIndex = 1,
+                //DisplayIndex = 1,
             });
+
+            // match states (windowed, min, max)
+            ProcessesGrid.Columns.Add(new DataGridViewCheckBoxColumn
+            {
+                Name = "MatchWindowed",
+                DataPropertyName = "MatchWindowed",
+                HeaderText = "Match Windowed?",
+                FillWeight = 12,
+                FlatStyle = FlatStyle.Standard,
+                DefaultCellStyle =
+                {
+                    SelectionBackColor = SystemColors.Window,
+                },
+            });
+            ProcessesGrid.Columns.Add(new DataGridViewCheckBoxColumn
+            {
+                Name = "MatchMinimized",
+                DataPropertyName = "MatchMinimized",
+                HeaderText = "Match Minimized?",
+                FillWeight = 12,
+                FlatStyle = FlatStyle.Standard,
+                DefaultCellStyle =
+                {
+                    SelectionBackColor = SystemColors.Window,
+                },
+            });
+            ProcessesGrid.Columns.Add(new DataGridViewCheckBoxColumn
+            {
+                Name = "MatchMaximized",
+                DataPropertyName = "MatchMaximized",
+                HeaderText = "Match Maximized?",
+                FillWeight = 12,
+                FlatStyle = FlatStyle.Standard,
+                DefaultCellStyle =
+                {
+                    SelectionBackColor = SystemColors.Window,
+                },
+            });
+            ProcessesGrid.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "State",
+                DataPropertyName = "State",
+                HeaderText = "Target State",
+                ReadOnly = true,
+                DefaultCellStyle = new DataGridViewCellStyle
+                {
+                    ForeColor = SystemColors.Highlight,
+                    SelectionForeColor = SystemColors.Highlight,
+                    SelectionBackColor = SystemColors.Window,
+                    Alignment = DataGridViewContentAlignment.MiddleLeft,
+                },
+                FillWeight = 15,
+            });
+
             ProcessesGrid.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "Top",
                 DataPropertyName = "Top",
                 HeaderText = "Top",
                 FillWeight = 8,
-                DisplayIndex = 2,
+                //DisplayIndex = 3,
             });
             ProcessesGrid.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -72,7 +126,7 @@ namespace WindowResizer
                 DataPropertyName = "Left",
                 HeaderText = "Left",
                 FillWeight = 8,
-                DisplayIndex = 3,
+                //DisplayIndex = 4,
             });
             ProcessesGrid.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -80,7 +134,7 @@ namespace WindowResizer
                 DataPropertyName = "Right",
                 HeaderText = "Right",
                 FillWeight = 8,
-                DisplayIndex = 4,
+                //DisplayIndex = 5,
             });
             ProcessesGrid.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -88,7 +142,7 @@ namespace WindowResizer
                 DataPropertyName = "Bottom",
                 HeaderText = "Bottom",
                 FillWeight = 8,
-                DisplayIndex = 5,
+                //DisplayIndex = 6,
             });
             ProcessesGrid.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -101,7 +155,7 @@ namespace WindowResizer
                 DataPropertyName = "AutoResize",
                 HeaderText = "Auto",
                 FillWeight = 8,
-                DisplayIndex = 6,
+                //DisplayIndex = 7,
                 FlatStyle = FlatStyle.Standard,
                 DefaultCellStyle =
                 {
@@ -124,11 +178,13 @@ namespace WindowResizer
                     Padding = new Padding(5)
                 },
                 FillWeight = 10,
-                DisplayIndex = 7,
+                //DisplayIndex = 8,
             });
 
+            int i = 0;
             foreach (DataGridViewColumn col in ProcessesGrid.Columns)
             {
+                col.DisplayIndex = i;
                 if (!col.Name.Equals("Name") && !col.Name.Equals("Title"))
                 {
                     col.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
@@ -136,6 +192,8 @@ namespace WindowResizer
 
                 col.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
                 col.HeaderCell.Style.Font = Helper.ChangeFontSize(ProcessesGrid.Font, 9F, FontStyle.Bold);
+
+                i++;
             }
         }
 
@@ -189,6 +247,9 @@ namespace WindowResizer
                     break;
 
                 case "AutoResize":
+                case "MatchWindowed":
+                case "MatchMinimized":
+                case "MatchMaximized":
                 case "Remove":
                     ProcessesGrid.Cursor = Cursors.Hand;
                     break;

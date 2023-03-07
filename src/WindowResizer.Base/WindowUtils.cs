@@ -32,7 +32,7 @@ public static class WindowUtils
 
         var windowTitle = Resizer.GetWindowTitle(handle) ?? string.Empty;
         var windowState = Resizer.GetWindowState(handle);
-        var match = GetMatchWindowSize(config.WindowSizes, processName, windowTitle, windowState, onlyAuto);
+        var match = GetMatchWindowSize(config, processName, windowTitle, windowState, onlyAuto);
         if (!match.NoMatch)
         {
             MoveMatchWindow(match, handle);
@@ -61,7 +61,7 @@ public static class WindowUtils
 
         var windowTitle = Resizer.GetWindowTitle(handle);
         var windowState = Resizer.GetWindowState(handle);
-        var match = GetMatchWindowSize(config.WindowSizes, processName, windowTitle, windowState);
+        var match = GetMatchWindowSize(config, processName, windowTitle, windowState);
 
         var place = Resizer.GetPlacement(handle);
 
@@ -73,12 +73,14 @@ public static class WindowUtils
     public static bool IsProcessAvailable(IntPtr handle, out string processName, Action<Process, Exception>? onFailed)
     {
         processName = string.Empty;
+        var process = Resizer.GetRealProcess(handle);
+        var test = "";
+        var testSuccess = TryGetProcessName(process, out test, onFailed);
         if (Resizer.IsChildWindow(handle))
         {
             return false;
         }
 
-        var process = Resizer.GetRealProcess(handle);
         if (process is null)
         {
             return false;
@@ -140,14 +142,15 @@ public static class WindowUtils
     }
 
     private static MatchWindowSize GetMatchWindowSize(
-        IEnumerable<WindowSize> configWindowSizes,
+        Config config,
         string processName,
         string? title,
         Common.Windows.WindowState windowState,
         bool onlyAuto = false)
     {
+        IEnumerable<WindowSize> configWindowSizes = config.WindowSizes;
         var windows = configWindowSizes.Where(w => w.Name.Equals(processName, StringComparison.OrdinalIgnoreCase)
-                                                    && w.State == windowState)
+                                                    && w.GetMatchStates().Contains(windowState))
                                  .ToList();
 
         if (onlyAuto)

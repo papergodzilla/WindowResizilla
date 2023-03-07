@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using Newtonsoft.Json;
 using WindowResizer.Common.Windows;
 
@@ -9,6 +11,12 @@ public class WindowSize : IComparable<WindowSize>
     public string Name { get; set; } = String.Empty;
 
     public string Title { get; set; } = String.Empty;
+    
+    public bool MatchWindowed { get; set; }
+
+    public bool MatchMinimized { get; set; }
+
+    public bool MatchMaximized { get; set; }
 
     public Rect Rect { get; set; }
 
@@ -22,6 +30,19 @@ public class WindowSize : IComparable<WindowSize>
     {
         var c = string.Compare(other?.Name ?? String.Empty, Name, StringComparison.Ordinal);
         return c == 0 ? string.Compare(other?.Title ?? String.Empty, Title, StringComparison.Ordinal) : c;
+    }
+
+    public List<WindowState> GetMatchStates()
+    {
+        List<WindowState> states = new();
+        if (this.MatchWindowed)
+            states.Add(WindowState.Normal);
+        if (this.MatchMinimized)
+            states.Add(WindowState.Minimized);
+        if (this.MatchMaximized)
+            states.Add(WindowState.Maximized);
+
+        return states;
     }
 
     #region properties

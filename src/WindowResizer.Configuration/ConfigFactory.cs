@@ -54,6 +54,16 @@ public static class ConfigFactory
 
         foreach (var config in p.Configs)
         {
+            // if prop not initialized, set to match on all window states (for backwards compat)
+            foreach (var winSize in config.WindowSizes)
+            {
+                if (!winSize.MatchWindowed && !winSize.MatchMinimized && !winSize.MatchMaximized)
+                {
+                    winSize.MatchWindowed = true;
+                    winSize.MatchMinimized = true;
+                    winSize.MatchMaximized = true;
+                }
+            }
             Profiles.Configs.Add(config);
         }
 
