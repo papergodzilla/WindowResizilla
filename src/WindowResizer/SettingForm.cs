@@ -24,7 +24,7 @@ namespace WindowResizer
         {
             Font = new System.Drawing.Font(App.DefaultFontFamilyName, 9F);
 
-            FormBorderStyle = FormBorderStyle.FixedSingle;
+            FormBorderStyle = FormBorderStyle.Sizable;
 
             FormClosing += SettingForm_Closing;
 
