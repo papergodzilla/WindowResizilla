@@ -22,17 +22,14 @@ namespace WindowResizer
         private readonly KeyboardHook _hook = new KeyboardHook();
         private static WindowEventHandler _windowEventHandler;
 
-        private static readonly string ConfigFile = $"{nameof(WindowResizer)}.config.json";
+        private static readonly string ConfigFile = $"{App.Name}.config.json";
 
         public TrayContext()
         {
             try
             {
-                var roamingPath = Path.Combine(Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), nameof(WindowResizer)),
-                    ConfigFile);
-                var portablePath = Path.Combine(
-                    Application.StartupPath, ConfigFile);
+                var roamingPath = Path.Combine(Helper.GeApplicationDataPath(), ConfigFile);
+                var portablePath = Path.Combine(App.StartupPath, ConfigFile);
                 ConfigFactory.SetPath(roamingPath, portablePath);
                 ConfigFactory.Load();
             }
@@ -46,20 +43,33 @@ namespace WindowResizer
                 ConfigFactory.Save();
             }
 
+            Log.SetLogPath(
+                ConfigFactory.PortableMode
+                    ? Application.StartupPath
+                    : Helper.GeApplicationDataPath());
+
             RegisterHotkeys();
             _trayIcon = BuildTrayIcon();
+            SetIconMode();
             SettingWindowInit();
 
             ProfilesEventsHandle();
             WindowsEventHandle();
 
-            Startup();
+            ToastRegister();
+
+            SystemStartup();
 
             if (!App.IsRunningAsUwp && ConfigFactory.Current.CheckUpdate && !ConfigFactory.PortableMode)
             {
-                _updater = new SquirrelUpdater(ConfirmUpdate, (message, tipIcon, seconds) =>
+                _updater = new SquirrelUpdater(ConfirmUpdate, (message, tipsLevel, seconds) =>
                 {
-                    ShowTooltips(message, (ToolTipIcon)tipIcon, seconds);
+                    Toast.ShowToast(
+                        title: $"{App.Name} Update",
+                        message: message,
+                        actionLevel: (Toast.ActionLevel)(tipsLevel),
+                        tray: _trayIcon,
+                        expired: seconds);
                 });
                 Update();
             }
@@ -92,7 +102,29 @@ namespace WindowResizer
 
         private static string BuildTrayToolTips()
         {
-            return $"{nameof(WindowResizer)}\nv{Application.ProductVersion}\nProfile: {ConfigFactory.Current.ProfileName}";
+            // NotifyIcon text check
+            const int TipsMaxLength = 60;
+            var tips =  $"{App.Name}\nv{Application.ProductVersion}\nProfile: {ConfigFactory.Current.ProfileName}";
+            return tips.Length > TipsMaxLength ? tips.Substring(0, TipsMaxLength) + "..." : tips;
+        }
+
+        private static void ToastRegister()
+        {
+            Toast.OnStart(action =>
+            {
+                switch (action)
+                {
+                    case Toast.ActionType.OpenProcessSetting:
+                    {
+                        _settingForm.Invoke((MethodInvoker)delegate
+                        {
+                            _settingForm.ShowFront();
+                            _settingForm.SwitchTab("ProcessesPage");
+                        });
+                        break;
+                    }
+                }
+            });
         }
 
         private static readonly ContextMenuStrip ContextMenu = new ContextMenuStrip();
@@ -112,7 +144,15 @@ namespace WindowResizer
             }
 
             ContextMenu.Items.Add(new ToolStripSeparator());
-            var item = new ToolStripMenuItem("Setting", Resources.SettingIcon.ToBitmap(), OnSetting);
+            var item = new ToolStripMenuItem("Save All", Resources.SaveIcon.ToBitmap(), (o, e) => SaveAll());
+            SetMenuStyle(item);
+            ContextMenu.Items.Add(item);
+            item = new ToolStripMenuItem("Restore All", Resources.RestoreIcon.ToBitmap(), (o, e) => RestoreAll());
+            SetMenuStyle(item);
+            ContextMenu.Items.Add(item);
+
+            ContextMenu.Items.Add(new ToolStripSeparator());
+            item = new ToolStripMenuItem("Settings", Resources.SettingIcon.ToBitmap(), OnSetting);
             SetMenuStyle(item);
             ContextMenu.Items.Add(item);
             item = new ToolStripMenuItem("Exit", Resources.ExitIcon.ToBitmap(), OnExit);
@@ -141,6 +181,7 @@ namespace WindowResizer
             _windowEventHandler?.Dispose();
             _trayIcon?.Dispose();
             _hook?.Dispose();
+            Toast.OnStop();
             Environment.Exit(0);
         }
 
@@ -151,7 +192,9 @@ namespace WindowResizer
                 SettingWindowInit();
             }
 
-            _settingForm?.Show();
+            SetIconMode();
+
+            _settingForm?.ShowFront();
         }
 
         #endregion
@@ -199,7 +242,13 @@ namespace WindowResizer
         {
             _hook.UnRegisterHotKey();
             RegisterHotkeys();
-            ShowTooltips(message, ToolTipIcon.Info, 2000);
+
+            Toast.ShowToast(
+                title: "Config Reloaded",
+                message: message,
+                actionLevel: Toast.ActionLevel.Success,
+                tray: _trayIcon,
+                expired: 2000);
         }
 
         #endregion
@@ -213,7 +262,7 @@ namespace WindowResizer
 
         private static bool ConfirmUpdate(string message)
         {
-            var res = MessageBox.Show(message, $"{nameof(WindowResizer)} Update",
+            var res = MessageBox.Show(message, $"{App.Name} Update",
                 MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
             return res == DialogResult.OK;
         }
@@ -222,13 +271,19 @@ namespace WindowResizer
 
         #region startup
 
-        private void Startup()
+        private void SystemStartup()
         {
-            if (Utils.Startup.StartupStatus())
+            if (App.IsRunningAsUwp)
             {
-                Utils.Startup.AddToStartup();
+                return;
+            }
+
+            if (Utils.SystemStartup.StartupStatus())
+            {
+                Utils.SystemStartup.AddToStartup();
             }
         }
+
         #endregion
 
         #region hotkeys
@@ -281,31 +336,14 @@ namespace WindowResizer
                 var keys = GetKeys(HotkeysType.RestoreAll);
                 if (keys.KeysEqual(e.Modifier, e.Key))
                 {
-                    var windows = Resizer.GetOpenWindows();
-                    windows.Reverse();
-                    foreach (var window in windows)
-                    {
-                        if (Resizer.GetWindowState(window) != WindowState.Minimized)
-                        {
-                            ResizeWindow(window, ConfigFactory.Current, null, null);
-                        }
-                    }
-
+                    RestoreAll();
                     return;
                 }
 
                 keys = GetKeys(HotkeysType.SaveAll);
                 if (keys.KeysEqual(e.Modifier, e.Key))
                 {
-                    var windows = Resizer.GetOpenWindows();
-                    foreach (var window in windows)
-                    {
-                        if (Resizer.GetWindowState(window) != WindowState.Minimized)
-                        {
-                            UpdateOrSaveWindowSize(window, ConfigFactory.Current, null);
-                        }
-                    }
-
+                    SaveAll();
                     return;
                 }
 
@@ -313,7 +351,18 @@ namespace WindowResizer
                 if (keys.KeysEqual(e.Modifier, e.Key))
                 {
                     var window = Resizer.GetForegroundHandle();
-                    UpdateOrSaveWindowSize(window, ConfigFactory.Current, OnGetProcessFailed);
+                    UpdateOrSaveWindowSize(window, ConfigFactory.Current, OnGetProcessFailed, s =>
+                    {
+                        if (ConfigFactory.Current.NotifyOnSaved)
+                        {
+                            Toast.ShowToast(
+                                title: "Config Saved",
+                                message: $"Process <{s}> saved!", tray: _trayIcon,
+                                actionLevel: Toast.ActionLevel.Success,
+                                actionType: Toast.ActionType.OpenProcessSetting);
+                        }
+                    });
+
                     return;
                 }
 
@@ -327,33 +376,82 @@ namespace WindowResizer
             catch (Exception exception)
             {
                 const string message = "An error occurred.\nCheck the log file for more details.";
-                ShowTooltips(message, ToolTipIcon.Error, 2000);
+                Toast.ShowToast(
+                    title: "An Error Occured",
+                    message: message,
+                    actionLevel: Toast.ActionLevel.Error,
+                    tray: _trayIcon,
+                    expired: 2000);
                 Log.Append($"Exception: {exception}");
             }
+        }
+
+        private void SaveAll()
+        {
+            var windows = Resizer.GetOpenWindows();
+            foreach (var window in windows)
+            {
+                if (Resizer.GetWindowState(window) != WindowState.Minimized)
+                {
+                    UpdateOrSaveWindowSize(window, ConfigFactory.Current, null);
+                }
+            }
+
+            if (ConfigFactory.Current.NotifyOnSaved)
+            {
+                Toast.ShowToast(
+                    title: "Config Saved",
+                    message: "Current processes saved.",
+                    tray: _trayIcon,
+                    actionLevel: Toast.ActionLevel.Success,
+                    actionType: Toast.ActionType.OpenProcessSetting);
+            }
+        }
+
+
+        private void RestoreAll()
+        {
+            ResizeAllWindow(ConfigFactory.Current, null);
         }
 
         #endregion
 
         private void OnConfigNoMatch(string processName, string windowTitle)
         {
-            ShowTooltips($"No saved settings for <{processName} :: {windowTitle}>.", ToolTipIcon.Info, 2000);
+            Toast.ShowToast(
+                title: "No Operations Available",
+                message: $"No saved settings for <{processName} :: {windowTitle}>.",
+                actionLevel: Toast.ActionLevel.Info, tray: _trayIcon,
+                expired: 2000);
         }
 
         private void OnGetProcessFailed(Process process, Exception e)
         {
             var message =
                 $"Unable to resize process <{process.ProcessName}>, elevated privileges may be required.";
-            ShowTooltips(message, ToolTipIcon.Warning, 1500);
+            Toast.ShowToast(
+                title: "Operation Failed",
+                message: message,
+                actionLevel: Toast.ActionLevel.Warning,
+                tray: _trayIcon,
+                expired: 2000);
             Log.Append($"{message}\nException: {e}");
         }
 
         private void SettingWindowInit()
         {
             _settingForm = new SettingForm(_hook);
+
+            _settingForm.Show();
+            _settingForm.Hide();
+
             _settingForm.ConfigReload += ReloadConfig;
         }
 
-        private void ShowTooltips(string message, ToolTipIcon tipIcon, int mSeconds) =>
-            _trayIcon.ShowBalloonTip(mSeconds, nameof(WindowResizer), message, tipIcon);
+        private void SetIconMode()
+        {
+            var darkMode = Core.Theme.ThemeDetect.IsDarkModeEnable();
+            _trayIcon.Icon = darkMode ? Resources.AppIcon_light : Resources.AppIcon;
+        }
     }
 }

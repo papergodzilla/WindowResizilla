@@ -35,11 +35,18 @@ namespace WindowResizer
             this.ConfigExportBtn = new System.Windows.Forms.Button();
             this.ConfigImportBtn = new System.Windows.Forms.Button();
             this.ConfigExportGroup = new System.Windows.Forms.GroupBox();
+            this.OpenConfigButton = new System.Windows.Forms.Button();
             this.GithubLinkLabel = new System.Windows.Forms.LinkLabel();
             this.VersionLabel = new System.Windows.Forms.Label();
             this.SettingTab = new System.Windows.Forms.TabControl();
             this.HotkeysPage = new System.Windows.Forms.TabPage();
+            this.globalConfigGroup = new System.Windows.Forms.GroupBox();
+            this.AutoResizeDelayCheckbox = new System.Windows.Forms.CheckBox();
+            this.ResizeByTitleCheckbox = new System.Windows.Forms.CheckBox();
+            this.DisableInFullScreenCheckBox = new System.Windows.Forms.CheckBox();
             this.settingGroupBox = new System.Windows.Forms.GroupBox();
+            this.NotifyOnSavedCheckBox = new System.Windows.Forms.CheckBox();
+            this.IncludeMinimizeCheckBox = new System.Windows.Forms.CheckBox();
             this.SaveAllKeyBtn = new System.Windows.Forms.Button();
             this.SaveAllKeyLabel = new System.Windows.Forms.Label();
             this.SaveAllLabel = new System.Windows.Forms.Label();
@@ -50,7 +57,6 @@ namespace WindowResizer
             this.RestoreKeyBtn = new System.Windows.Forms.Button();
             this.SaveKeyLabel = new System.Windows.Forms.Label();
             this.SaveKeyBtn = new System.Windows.Forms.Button();
-            this.DisableInFullScreenCheckBox = new System.Windows.Forms.CheckBox();
             this.RestoreAllKeyBtn = new System.Windows.Forms.Button();
             this.RestoreAllLabel = new System.Windows.Forms.Label();
             this.ProcessesPage = new System.Windows.Forms.TabPage();
@@ -66,6 +72,7 @@ namespace WindowResizer
             this.ConfigExportGroup.SuspendLayout();
             this.SettingTab.SuspendLayout();
             this.HotkeysPage.SuspendLayout();
+            this.globalConfigGroup.SuspendLayout();
             this.settingGroupBox.SuspendLayout();
             this.ProcessesPage.SuspendLayout();
             this.ProfilesTab.SuspendLayout();
@@ -136,16 +143,28 @@ namespace WindowResizer
             // 
             // ConfigExportGroup
             // 
+            this.ConfigExportGroup.Controls.Add(this.OpenConfigButton);
             this.ConfigExportGroup.Controls.Add(this.ConfigImportBtn);
             this.ConfigExportGroup.Controls.Add(this.ConfigExportBtn);
             this.ConfigExportGroup.Location = new System.Drawing.Point(26, 277);
             this.ConfigExportGroup.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.ConfigExportGroup.Name = "ConfigExportGroup";
+            this.ConfigExportGroup.Size = new System.Drawing.Size(925, 119);
             this.ConfigExportGroup.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.ConfigExportGroup.Size = new System.Drawing.Size(740, 90);
             this.ConfigExportGroup.TabIndex = 12;
             this.ConfigExportGroup.TabStop = false;
             this.ConfigExportGroup.Text = "Import/Export Config";
+            // 
+            // OpenConfigButton
+            // 
+            this.OpenConfigButton.BackColor = System.Drawing.SystemColors.ButtonFace;
+            this.OpenConfigButton.Location = new System.Drawing.Point(270, 46);
+            this.OpenConfigButton.Name = "OpenConfigButton";
+            this.OpenConfigButton.Size = new System.Drawing.Size(212, 40);
+            this.OpenConfigButton.TabIndex = 11;
+            this.OpenConfigButton.Text = "Open Config Directory";
+            this.OpenConfigButton.UseVisualStyleBackColor = false;
+            this.OpenConfigButton.Click += new System.EventHandler(this.OpenConfigButton_Click);
             // 
             // GithubLinkLabel
             // 
@@ -186,6 +205,7 @@ namespace WindowResizer
             // HotkeysPage
             // 
             this.HotkeysPage.BackColor = System.Drawing.SystemColors.Window;
+            this.HotkeysPage.Controls.Add(this.globalConfigGroup);
             this.HotkeysPage.Controls.Add(this.settingGroupBox);
             this.HotkeysPage.Location = new System.Drawing.Point(4, 44);
             this.HotkeysPage.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
@@ -195,8 +215,64 @@ namespace WindowResizer
             this.HotkeysPage.TabIndex = 0;
             this.HotkeysPage.Text = "Hotkeys";
             // 
+            // globalConfigGroup
+            // 
+            this.globalConfigGroup.Controls.Add(this.AutoResizeDelayCheckbox);
+            this.globalConfigGroup.Controls.Add(this.ResizeByTitleCheckbox);
+            this.globalConfigGroup.Controls.Add(this.DisableInFullScreenCheckBox);
+            this.globalConfigGroup.Location = new System.Drawing.Point(33, 385);
+            this.globalConfigGroup.Name = "globalConfigGroup";
+            this.globalConfigGroup.Size = new System.Drawing.Size(925, 173);
+            this.globalConfigGroup.TabIndex = 17;
+            this.globalConfigGroup.TabStop = false;
+            this.globalConfigGroup.Text = "Global Config";
+            // 
+            // AutoResizeDelayCheckbox
+            // 
+            this.AutoResizeDelayCheckbox.AutoSize = true;
+            this.AutoResizeDelayCheckbox.BackColor = System.Drawing.SystemColors.Window;
+            this.AutoResizeDelayCheckbox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.AutoResizeDelayCheckbox.Location = new System.Drawing.Point(35, 117);
+            this.AutoResizeDelayCheckbox.Margin = new System.Windows.Forms.Padding(2);
+            this.AutoResizeDelayCheckbox.Name = "AutoResizeDelayCheckbox";
+            this.AutoResizeDelayCheckbox.Size = new System.Drawing.Size(140, 20);
+            this.AutoResizeDelayCheckbox.TabIndex = 8;
+            this.AutoResizeDelayCheckbox.TabStop = false;
+            this.AutoResizeDelayCheckbox.Text = "Auto Resize Delay";
+            this.AutoResizeDelayCheckbox.UseVisualStyleBackColor = false;
+            // 
+            // ResizeByTitleCheckbox
+            // 
+            this.ResizeByTitleCheckbox.AutoSize = true;
+            this.ResizeByTitleCheckbox.BackColor = System.Drawing.SystemColors.Window;
+            this.ResizeByTitleCheckbox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.ResizeByTitleCheckbox.Location = new System.Drawing.Point(376, 62);
+            this.ResizeByTitleCheckbox.Margin = new System.Windows.Forms.Padding(2);
+            this.ResizeByTitleCheckbox.Name = "ResizeByTitleCheckbox";
+            this.ResizeByTitleCheckbox.Size = new System.Drawing.Size(118, 20);
+            this.ResizeByTitleCheckbox.TabIndex = 7;
+            this.ResizeByTitleCheckbox.TabStop = false;
+            this.ResizeByTitleCheckbox.Text = "Resize by Title";
+            this.ResizeByTitleCheckbox.UseVisualStyleBackColor = false;
+            // 
+            // DisableInFullScreenCheckBox
+            // 
+            this.DisableInFullScreenCheckBox.AutoSize = true;
+            this.DisableInFullScreenCheckBox.BackColor = System.Drawing.SystemColors.Window;
+            this.DisableInFullScreenCheckBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.DisableInFullScreenCheckBox.Location = new System.Drawing.Point(35, 62);
+            this.DisableInFullScreenCheckBox.Margin = new System.Windows.Forms.Padding(2);
+            this.DisableInFullScreenCheckBox.Name = "DisableInFullScreenCheckBox";
+            this.DisableInFullScreenCheckBox.Size = new System.Drawing.Size(194, 20);
+            this.DisableInFullScreenCheckBox.TabIndex = 6;
+            this.DisableInFullScreenCheckBox.TabStop = false;
+            this.DisableInFullScreenCheckBox.Text = "Disable in FullScreen Mode";
+            this.DisableInFullScreenCheckBox.UseVisualStyleBackColor = false;
+            // 
             // settingGroupBox
             // 
+            this.settingGroupBox.Controls.Add(this.NotifyOnSavedCheckBox);
+            this.settingGroupBox.Controls.Add(this.IncludeMinimizeCheckBox);
             this.settingGroupBox.Controls.Add(this.SaveAllKeyBtn);
             this.settingGroupBox.Controls.Add(this.SaveAllKeyLabel);
             this.settingGroupBox.Controls.Add(this.SaveAllLabel);
@@ -207,17 +283,44 @@ namespace WindowResizer
             this.settingGroupBox.Controls.Add(this.RestoreKeyBtn);
             this.settingGroupBox.Controls.Add(this.SaveKeyLabel);
             this.settingGroupBox.Controls.Add(this.SaveKeyBtn);
-            this.settingGroupBox.Controls.Add(this.DisableInFullScreenCheckBox);
             this.settingGroupBox.Controls.Add(this.RestoreAllKeyBtn);
             this.settingGroupBox.Controls.Add(this.RestoreAllLabel);
             this.settingGroupBox.Location = new System.Drawing.Point(26, 19);
             this.settingGroupBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.settingGroupBox.Name = "settingGroupBox";
+            this.settingGroupBox.Size = new System.Drawing.Size(925, 331);
             this.settingGroupBox.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.settingGroupBox.Size = new System.Drawing.Size(653, 332);
             this.settingGroupBox.TabIndex = 16;
             this.settingGroupBox.TabStop = false;
             this.settingGroupBox.Text = "Hotkeys ";
+            // 
+            // NotifyOnSavedCheckBox
+            // 
+            this.NotifyOnSavedCheckBox.AutoSize = true;
+            this.NotifyOnSavedCheckBox.BackColor = System.Drawing.SystemColors.Window;
+            this.NotifyOnSavedCheckBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.NotifyOnSavedCheckBox.Location = new System.Drawing.Point(694, 190);
+            this.NotifyOnSavedCheckBox.Margin = new System.Windows.Forms.Padding(2);
+            this.NotifyOnSavedCheckBox.Name = "NotifyOnSavedCheckBox";
+            this.NotifyOnSavedCheckBox.Size = new System.Drawing.Size(124, 20);
+            this.NotifyOnSavedCheckBox.TabIndex = 20;
+            this.NotifyOnSavedCheckBox.TabStop = false;
+            this.NotifyOnSavedCheckBox.Text = "Notify on Saved";
+            this.NotifyOnSavedCheckBox.UseVisualStyleBackColor = false;
+            // 
+            // IncludeMinimizeCheckBox
+            // 
+            this.IncludeMinimizeCheckBox.AutoSize = true;
+            this.IncludeMinimizeCheckBox.BackColor = System.Drawing.SystemColors.Window;
+            this.IncludeMinimizeCheckBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.IncludeMinimizeCheckBox.Location = new System.Drawing.Point(694, 267);
+            this.IncludeMinimizeCheckBox.Margin = new System.Windows.Forms.Padding(2);
+            this.IncludeMinimizeCheckBox.Name = "IncludeMinimizeCheckBox";
+            this.IncludeMinimizeCheckBox.Size = new System.Drawing.Size(135, 20);
+            this.IncludeMinimizeCheckBox.TabIndex = 19;
+            this.IncludeMinimizeCheckBox.TabStop = false;
+            this.IncludeMinimizeCheckBox.Text = "Include Minimized";
+            this.IncludeMinimizeCheckBox.UseVisualStyleBackColor = false;
             // 
             // SaveAllKeyBtn
             // 
@@ -516,6 +619,8 @@ namespace WindowResizer
             this.ConfigExportGroup.ResumeLayout(false);
             this.SettingTab.ResumeLayout(false);
             this.HotkeysPage.ResumeLayout(false);
+            this.globalConfigGroup.ResumeLayout(false);
+            this.globalConfigGroup.PerformLayout();
             this.settingGroupBox.ResumeLayout(false);
             this.settingGroupBox.PerformLayout();
             this.ProcessesPage.ResumeLayout(false);
@@ -528,6 +633,10 @@ namespace WindowResizer
             this.ResumeLayout(false);
 
         }
+
+        private System.Windows.Forms.Button OpenConfigButton;
+
+        private System.Windows.Forms.CheckBox NotifyOnSavedCheckBox;
 
         private System.Windows.Forms.CheckBox StartupCheckBox;
 
@@ -570,5 +679,9 @@ namespace WindowResizer
         private System.Windows.Forms.Label RestoreKeyLabel;
         private System.Windows.Forms.Label RestoreAllKeyLabel;
         private System.Windows.Forms.TabPage ProfilesTab;
+        private System.Windows.Forms.CheckBox IncludeMinimizeCheckBox;
+        private System.Windows.Forms.CheckBox ResizeByTitleCheckbox;
+        private System.Windows.Forms.GroupBox globalConfigGroup;
+        private System.Windows.Forms.CheckBox AutoResizeDelayCheckbox;
     }
 }

@@ -12,13 +12,21 @@ Write-Host '>> current version: ', $version -ForegroundColor Green
 
 # build
 Write-Host '>> building...' -ForegroundColor Green
+
+$publishFolder = 'publish\WindowResizer'
+if (Test-Path $publishFolder) {
+
+    Write-Host '>> publish folder not empty, delete existing files...'
+    Remove-Item $publishFolder -Recurse -Force
+}
+
 dotnet restore
-dotnet publish .\src\WindowResizer\ -c Release -o publish\WindowResizer  /p:Version=$version
+dotnet publish .\src\WindowResizer\ -c Release -o $publishFolder  /p:Version=$version
 
 # nuget pack
 Write-Host '>> packing...' -ForegroundColor Green
 Copy-Item .\installer\AppIcon.png .\publish\WindowResizer\AppIcon.png
-Nuget pack .\installer\WindowResizer.nuspec -Version $version -Properties Configuration=Release -BasePath .\publish\WindowResizer -OutputDirectory  .\pack
+nuget pack .\installer\WindowResizer.nuspec -Version $version -Properties Configuration=Release -BasePath .\publish\WindowResizer -OutputDirectory  .\pack
 
 # squirrel release
 Write-Host '>> releasing...' -ForegroundColor Green

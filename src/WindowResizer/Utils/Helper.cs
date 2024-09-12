@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 
@@ -17,7 +18,7 @@ namespace WindowResizer.Utils
             return font;
         }
 
-        public static void ShowMessageBox(string message, MessageBoxIcon icon = MessageBoxIcon.Error, string title = nameof(WindowResizer))
+        public static void ShowMessageBox(string message, MessageBoxIcon icon = MessageBoxIcon.Error, string title = App.Name)
         {
             MessageBox.Show(message, title, MessageBoxButtons.OK, icon);
         }
@@ -49,5 +50,13 @@ namespace WindowResizer.Utils
 
             return instance;
         }
+
+        public static bool IsWindows10Greater()
+        {
+            return Environment.OSVersion.Version >= new Version(10, 0, 17763);
+        }
+
+        public static string GeApplicationDataPath() =>
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), nameof(WindowResizer));
     }
 }

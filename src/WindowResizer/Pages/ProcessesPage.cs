@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using WindowResizer.Configuration;
 using WindowResizer.Utils;
@@ -14,7 +15,7 @@ namespace WindowResizer
             ProcessesGridLayout();
 
             ProcessesGrid.AutoGenerateColumns = false;
-            ProcessesGrid.DataSource = ConfigFactory.Current.WindowSizes;
+            ProcessesGrid.DataSource = ConfigFactory.Current.GetWindowSizes();
 
             ProcessesGrid.ShowCellToolTips = true;
             ProcessesGrid.CellFormatting += ProcessesGrid_CellFormatting;
@@ -110,6 +111,8 @@ namespace WindowResizer
                     Alignment = DataGridViewContentAlignment.MiddleLeft,
                 },
                 FillWeight = 15,
+                DisplayIndex = 1,
+                Visible = ConfigFactory.Current.EnableResizeByTitle
             });
 
             ProcessesGrid.Columns.Add(new DataGridViewTextBoxColumn
@@ -117,6 +120,7 @@ namespace WindowResizer
                 Name = "Top",
                 DataPropertyName = "Top",
                 HeaderText = "Top",
+                ValueType = typeof(int),
                 FillWeight = 8,
                 //DisplayIndex = 3,
             });
@@ -125,6 +129,7 @@ namespace WindowResizer
                 Name = "Left",
                 DataPropertyName = "Left",
                 HeaderText = "Left",
+                ValueType = typeof(int),
                 FillWeight = 8,
                 //DisplayIndex = 4,
             });
@@ -133,6 +138,7 @@ namespace WindowResizer
                 Name = "Right",
                 DataPropertyName = "Right",
                 HeaderText = "Right",
+                ValueType = typeof(int),
                 FillWeight = 8,
                 //DisplayIndex = 5,
             });
@@ -141,6 +147,7 @@ namespace WindowResizer
                 Name = "Bottom",
                 DataPropertyName = "Bottom",
                 HeaderText = "Bottom",
+                ValueType = typeof(int),
                 FillWeight = 8,
                 //DisplayIndex = 6,
             });
@@ -163,6 +170,20 @@ namespace WindowResizer
                 },
             });
 
+            ProcessesGrid.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "AutoResizeDelay",
+                DataPropertyName = "AutoResizeDelay",
+                HeaderText = "Delay",
+                FillWeight = 8,
+                DisplayIndex = 7,
+                ValueType = typeof(int),
+                DefaultCellStyle =
+                {
+                    SelectionBackColor = SystemColors.Window,
+                },
+            });
+
             ProcessesGrid.Columns.Add(new DataGridViewButtonColumn
             {
                 UseColumnTextForButtonValue = true,
@@ -178,7 +199,7 @@ namespace WindowResizer
                     Padding = new Padding(5)
                 },
                 FillWeight = 10,
-                //DisplayIndex = 8,
+                DisplayIndex = 8,
             });
 
             int i = 0;
@@ -188,6 +209,16 @@ namespace WindowResizer
                 if (!col.Name.Equals("Name") && !col.Name.Equals("Title"))
                 {
                     col.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                }
+
+                if (col.Name.Equals("AutoResize"))
+                {
+                    col.ToolTipText = "Auto resize on/off";
+                }
+
+                if (col.Name.Equals("AutoResizeDelay"))
+                {
+                    col.ToolTipText = "Auto resizing delay in milliseconds, effective for process";
                 }
 
                 col.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
@@ -205,8 +236,30 @@ namespace WindowResizer
             }
         }
 
+        private const int MaxAutoResizeDelay = 10 * 1000;
+
         private void ProcessesGrid_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
+            if (e.ColumnIndex == ProcessesGrid.Columns["AutoResizeDelay"]?.Index)
+            {
+                DataGridViewCell cell = ProcessesGrid.Rows[e.RowIndex].Cells[e.ColumnIndex];
+                var val = (int)cell.Value;
+                val = val < 0 ? 0 : val;
+                val = val > MaxAutoResizeDelay ? MaxAutoResizeDelay : val;
+                cell.Value = val;
+
+                // same delay for process
+                var process = ProcessesGrid.Rows[e.RowIndex].Cells[0].Value.ToString();
+
+                if (ProcessesGrid.DataSource is BindingList<WindowSize> data)
+                {
+                    foreach (var ws in data.Where(i => i.Name.Equals(process)))
+                    {
+                        ws.AutoResizeDelay = val;
+                    }
+                }
+            }
+
             ConfigFactory.Save();
         }
 
@@ -268,6 +321,21 @@ namespace WindowResizer
             {
                 ConfigFactory.Current.WindowSizes.RemoveAt(e.RowIndex);
                 ConfigFactory.Save();
+            }
+        }
+
+        private void ProcessesGrid_UpdateDataSource()
+        {
+            ProcessesGrid.DataSource = ConfigFactory.Current.GetWindowSizes();
+
+            if (ProcessesGrid.Columns["Title"] != null)
+            {
+                ProcessesGrid.Columns["Title"].Visible = ConfigFactory.Current.EnableResizeByTitle;
+            }
+
+            if (ProcessesGrid.Columns["AutoResizeDelay"] != null)
+            {
+                ProcessesGrid.Columns["AutoResizeDelay"].Visible = ConfigFactory.Current.EnableAutoResizeDelay;
             }
         }
     }

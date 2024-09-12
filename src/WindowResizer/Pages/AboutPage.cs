@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
@@ -14,36 +14,41 @@ namespace WindowResizer
 
         private void AboutPageInit()
         {
-            StartupCheckBox.Checked = Startup.StartupStatus();
-            StartupCheckBox.CheckedChanged += StartupCheckBox_CheckedChanged;
-
-
-            UpdateCheckBox.Enabled = !ConfigFactory.PortableMode;
-            UpdateCheckBox.Checked = ConfigFactory.Current.CheckUpdate && !ConfigFactory.PortableMode;
-            UpdateCheckBox.CheckedChanged += UpdateCheckBox_CheckedChanged;
-
-
-            var portable = ConfigFactory.PortableMode ? " (portable)" : string.Empty;
-            VersionLabel.Text = $"{nameof(WindowResizer)} {Application.ProductVersion}{portable}";
-
-            GithubLinkLabel.Text = ProjectLink;
-            GithubLinkLabel.LinkClicked += LinkClicked;
 
             if (App.IsRunningAsUwp)
             {
+                StartupCheckBox.Checked = true;
+                StartupCheckBox.Enabled= false;
+
+                UpdateCheckBox.Checked = true;
                 UpdateCheckBox.Enabled = false;
             }
+            else
+            {
+                StartupCheckBox.Checked = SystemStartup.StartupStatus();
+                StartupCheckBox.CheckedChanged += StartupCheckBox_CheckedChanged;
+
+                UpdateCheckBox.Enabled = !ConfigFactory.PortableMode;
+                UpdateCheckBox.Checked = ConfigFactory.Current.CheckUpdate && !ConfigFactory.PortableMode;
+                UpdateCheckBox.CheckedChanged += UpdateCheckBox_CheckedChanged;
+            }
+
+            var portable = ConfigFactory.PortableMode ? " (portable)" : string.Empty;
+            VersionLabel.Text = $"{App.Name} {Application.ProductVersion}{portable}";
+
+            GithubLinkLabel.Text = ProjectLink;
+            GithubLinkLabel.LinkClicked += LinkClicked;
         }
 
         private void StartupCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (StartupCheckBox.Checked)
             {
-                Startup.AddToStartup();
+                SystemStartup.AddToStartup();
             }
             else
             {
-                Startup.RemoveFromStartup();
+                SystemStartup.RemoveFromStartup();
             }
         }
 
@@ -63,7 +68,7 @@ namespace WindowResizer
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
-                Title = "Export Config", AddExtension = true, DefaultExt = "json", FileName = $"{nameof(WindowResizer)}.config.json"
+                Title = "Export Config", AddExtension = true, DefaultExt = "json", FileName = $"{App.Name}.config.json"
             };
             if (saveFileDialog.ShowDialog() != DialogResult.Cancel && saveFileDialog.FileName != "")
             {
@@ -108,6 +113,25 @@ namespace WindowResizer
                 Log.Append($"Import failed: {exception}");
                 MessageBox.Show("Import failed, config file is not valid json.");
             }
+        }
+
+        private void OpenConfigButton_Click(object sender, EventArgs e)
+        {
+            var configFolder = ConfigFactory.PortableMode
+                ? Application.StartupPath
+                : Helper.GeApplicationDataPath();
+
+            if (!Directory.Exists(configFolder))
+            {
+                return;
+            }
+
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                Arguments = configFolder, FileName = "explorer.exe"
+            };
+
+            Process.Start(startInfo);
         }
     }
 }

@@ -1,8 +1,11 @@
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Windows.Forms;
 using WindowResizer.Configuration;
 using WindowResizer.Core.Shortcuts;
+using WindowResizer.Utils;
 
 namespace WindowResizer
 {
@@ -49,7 +52,7 @@ namespace WindowResizer
 
         private void SetWindowTitle()
         {
-            Text = $"{nameof(WindowResizer)} - Setting  ::  {ConfigFactory.Current.ProfileName}";
+            Text = $"{App.Name} - Setting  ::  {ConfigFactory.Current.ProfileName}";
         }
 
         public delegate void ConfigReloadEvent(string message);
@@ -61,6 +64,18 @@ namespace WindowResizer
             HotkeysPageReload();
             ConfigReload(message);
             ProcessesGrid.DataSource = ConfigFactory.Current.WindowSizes;
+        }
+
+        public void ShowFront()
+        {
+            Show();
+            WindowState = FormWindowState.Normal;
+            Activate();
+        }
+
+        public void SwitchTab(string tabName)
+        {
+            SettingTab.SelectedTab = SettingTab.TabPages[tabName];
         }
     }
 }
