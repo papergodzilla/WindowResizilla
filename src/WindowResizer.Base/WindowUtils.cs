@@ -48,7 +48,7 @@ public static class WindowUtils
 
         var windowTitle = Resizer.GetWindowTitle(handle) ?? string.Empty;
         var windowState = Resizer.GetWindowState(handle);
-        var match = GetMatchWindowSize(config, processName, windowTitle, windowState, config.EnableResizeByTitle, onlyAuto);
+        var match = GetMatchWindowSize(config, processName, windowTitle, windowState, onlyAuto);
         if (!match.NoMatch)
         {
             MoveMatchWindow(match, handle);
@@ -186,7 +186,7 @@ public static class WindowUtils
                                                     && w.GetMatchStates().Contains(windowState))
                                  .ToList();
 
-        if (!enableResizeByTitle)
+        if (!config.EnableResizeByTitle)
         {
             windows = windows.Where(w => w.Title.Equals("*")).ToList();
 
